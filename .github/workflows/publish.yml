@@ -23,10 +23,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check if version has changed
         id: check-version
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const version = '${{ github.event.inputs.version }}' || require('./package.json').version;
@@ -65,9 +65,9 @@ jobs:
       version: ${{ env.EXT_VERSION }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 16.x
           cache: "npm"
@@ -88,7 +88,7 @@ jobs:
           
       - run: npm run package
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: vscode-github-actions-${{ env.EXT_VERSION }}.vsix
           path: ./vscode-github-actions-${{ env.EXT_VERSION }}.vsix
@@ -97,7 +97,7 @@ jobs:
         run: mv package.json.real package.json
       
       - name: Create release and upload release asset
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require("fs");
@@ -136,7 +136,7 @@ jobs:
     permissions: {}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: vscode-github-actions-${{ needs.release.outputs.version }}.vsix
 
@@ -147,20 +147,3 @@ jobs:
           pat: ${{ secrets.PUBLISHER_KEY }}
           registryUrl: https://marketplace.visualstudio.com
           extensionFile: ./vscode-github-actions-${{ needs.release.outputs.version }}.vsix
-          
-  open-vsx-publish:
-    name: Publish to Open VSX Registry
-    needs: release
-    environment: publish-open-vsx
-    runs-on: ubuntu-latest
-    env:
-      OPEN_VSX_TOKEN: ${{ secrets.OPEN_VSX_TOKEN }}
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: vscode-github-actions-${{ needs.release.outputs.version }}.vsix
-
-      - name: Publish to Registry
-        run: |
-          npx ovsx publish -p $OPEN_VSX_TOKEN *.vsix
